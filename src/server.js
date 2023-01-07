@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 
 const songs = require('./api/song');
 const SongService = require('./services/postgres/SongService');
@@ -19,12 +20,19 @@ const authentications = require('./api/authentications');
 const AuthenticationsService = require('./services/postgres/AuthenticationsService');
 const TokenManager = require('./tokenize/TokenManager');
 const AuthenticationsValidator = require('./validator/authentications');
+const PlaylistService = require('./services/postgres/PlaylistService');
+const Playlists = require('./api/playlists');
+const PlaylistValidator = require('./validator/playlist');
+const SongInPlaylistService = require('./services/postgres/SongInPlaylistService');
+const songinplaylist = require('./api/songinplaylist');
 
 const init = async () => {
   const songService = new SongService();
   const albumService = new AlbumServices();
   const userService = new UserService();
   const authenticationsService = new AuthenticationsService();
+  const playlistService = new PlaylistService();
+  const songInPlaylistService = new SongInPlaylistService();
 
   const server = Hapi.Server({
     port: process.env.PORT,
@@ -35,6 +43,12 @@ const init = async () => {
       },
     },
   });
+
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+  ]);
 
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
@@ -67,6 +81,22 @@ const init = async () => {
     return h.continue;
   });
 
+  server.auth.strategy('openmusic_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
+  });
+
   await server.register([
     {
       plugin: songs,
@@ -96,6 +126,24 @@ const init = async () => {
         userService,
         tokenManager: TokenManager,
         validator: AuthenticationsValidator,
+      },
+    },
+    {
+      plugin: Playlists,
+      options: {
+        service: playlistService,
+        songService,
+        songInPlaylistService,
+        validator: PlaylistValidator,
+      },
+    },
+    {
+      plugin: songinplaylist,
+      options: {
+        songInPlaylistService,
+        playlistService,
+        songService,
+        validator: PlaylistValidator,
       },
     },
   ]);
