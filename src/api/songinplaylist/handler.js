@@ -1,8 +1,15 @@
 class SongInPlaylistHandler {
-  constructor(songInPlaylistService, playlistService, songService, validator) {
+  constructor(
+    songInPlaylistService,
+    playlistService,
+    songService,
+    activitiesService,
+    validator,
+  ) {
     this._songInPlaylistService = songInPlaylistService;
     this._playlistService = playlistService;
     this._songService = songService;
+    this._activitiesService = activitiesService;
     this._validator = validator;
   }
 
@@ -14,14 +21,14 @@ class SongInPlaylistHandler {
     const { id: credentialId } = request.auth.credentials;
 
     await this._songService.getSongById(songId);
-
     await this._playlistService.verifyPlaylistOwner(playlistId, credentialId);
 
     const playlistSongId = await this._songInPlaylistService.addSongToPlaylist(songId, playlistId);
+    await this._activitiesService.addSongActivity(playlistId, songId, credentialId);
 
     const response = h.response({
       status: 'success',
-      message: 'Lagu berhasil ditambahkan kedalam playlist',
+      message: 'Berhasil menambahkan lagu ke dalam playlist',
       data: {
         playlistSongId,
       },
@@ -61,8 +68,8 @@ class SongInPlaylistHandler {
     const { id: playlistId } = request.params;
 
     await this._playlistService.verifyPlaylistOwner(playlistId, credentialId);
-
     await this._songInPlaylistService.deleteSongInPlaylist(songId, playlistId);
+    await this._activitiesService.deleteSongActivity(playlistId, songId, credentialId);
 
     return {
       status: 'success',
