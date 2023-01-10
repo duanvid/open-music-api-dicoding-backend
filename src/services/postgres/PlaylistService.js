@@ -5,8 +5,9 @@ const InvariantError = require('../../exeptions/InvariantError');
 const NotFoundError = require('../../exeptions/NotfoundError');
 
 class PlaylistService {
-  constructor() {
+  constructor(collaborationService) {
     this._pool = new Pool();
+    this._collaborationService = collaborationService;
   }
 
   async addPlaylist({ name, owner }) {
@@ -30,8 +31,9 @@ class PlaylistService {
     const query = {
       text: `SELECT playlist.*, users.username
       FROM playlist
-      INNER JOIN users ON playlist.owner=users.id
-      WHERE playlist.owner = $1`,
+      INNER JOIN users ON playlist.owner = users.id
+      LEFT JOIN collaborations ON playlist.id = collaborations.playlist_id
+      WHERE playlist.owner = $1 OR collaborations.user_id = $1`,
       values: [owner],
     };
 
@@ -86,6 +88,17 @@ class PlaylistService {
 
     if (playlist.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyPlaylistAccess(playlistId, userId) {
+    try {
+      await this.verifyPlaylistOwner(playlistId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      await this._collaborationService.collaborationAccess(playlistId, userId);
     }
   }
 }
