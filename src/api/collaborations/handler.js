@@ -1,11 +1,13 @@
 class CollaborationHandler {
-  constructor(collaborationsService, playlistService, userService) {
+  constructor(collaborationsService, playlistService, userService, validator) {
     this._collaborationsService = collaborationsService;
     this._playlistService = playlistService;
     this._userService = userService;
+    this._validator = validator;
   }
 
   async postCollaborationHandler(request, h) {
+    await this._validator.validateCollaborationPayload(request.payload);
     const { playlistId, userId } = request.payload;
     const { id: credentialId } = request.auth.credentials;
 

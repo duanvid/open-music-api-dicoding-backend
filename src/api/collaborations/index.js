@@ -8,11 +8,13 @@ module.exports = {
     collaborationsService,
     playlistService,
     userService,
+    validator,
   }) => {
     const collaborationHandler = new CollaborationHandler(
       collaborationsService,
       playlistService,
       userService,
+      validator,
     );
     server.route(routes(collaborationHandler));
   },

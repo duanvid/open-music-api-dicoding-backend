@@ -24,6 +24,7 @@ const SongInPlaylistService = require('./services/postgres/SongInPlaylistService
 
 const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./services/postgres/CollaborationsService');
+const CollaborationValidator = require('./validator/collaborations');
 
 const playlistactivities = require('./api/playlistactivities');
 const ActivitiesService = require('./services/postgres/ActivitiesService');
@@ -85,6 +86,7 @@ const init = async () => {
       });
 
       newResponse.code(500);
+      console.error(response);
       return newResponse;
     }
 
@@ -170,6 +172,7 @@ const init = async () => {
         collaborationsService,
         playlistService,
         userService,
+        validator: CollaborationValidator,
       },
     },
   ]);
