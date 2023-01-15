@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
+const path = require('path');
 
 const songs = require('./api/song');
 const SongService = require('./services/postgres/SongService');
@@ -38,6 +40,10 @@ const ProducerService = require('./services/rabbitmq/ProducerService');
 
 const ClientError = require('./exeptions/ClientError');
 const TokenManager = require('./tokenize/TokenManager');
+const StorageService = require('./services/storage/StorageService');
+const upload = require('./api/upload');
+const UploadValidator = require('./validator/uploads');
+const AlbumCoverService = require('./services/postgres/AlbumCoverService');
 
 const init = async () => {
   const songService = new SongService();
@@ -49,6 +55,8 @@ const init = async () => {
   const collaborationsService = new CollaborationsService();
   const playlistService = new PlaylistService(collaborationsService);
   const producerService = ProducerService;
+  const storageService = new StorageService(path.resolve(__dirname, 'api/upload/file/images'));
+  const coverService = new AlbumCoverService();
 
   const server = Hapi.Server({
     port: process.env.PORT,
@@ -63,6 +71,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -185,6 +196,14 @@ const init = async () => {
         exportService: producerService,
         playlistService,
         validator: PlaylistValidator,
+      },
+    },
+    {
+      plugin: upload,
+      options: {
+        service: storageService,
+        coverService,
+        validator: UploadValidator,
       },
     },
   ]);

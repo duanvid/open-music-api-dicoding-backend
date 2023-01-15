@@ -6,4 +6,11 @@ const mapPlaylistWithSong = (playlist) => ({
   username: playlist.username,
 });
 
-module.exports = { mapSongToDisplay, mapPlaylistWithSong };
+const mapAlbum = (album) => ({
+  id: album.id,
+  name: album.name,
+  year: album.year,
+  coverUrl: album.coverurl,
+});
+
+module.exports = { mapSongToDisplay, mapPlaylistWithSong, mapAlbum };

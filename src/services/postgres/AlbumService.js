@@ -2,6 +2,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exeptions/InvariantError');
 const NotFoundError = require('../../exeptions/NotfoundError');
+const { mapAlbum } = require('../../utils');
 
 class AlbumService {
   constructor() {
@@ -43,7 +44,8 @@ class AlbumService {
 
     const songInAlbum = await this._pool.query(songQuery);
 
-    const album = { ...result.rows[0], songs: songInAlbum.rows };
+    const albumDetail = result.rows.map(mapAlbum);
+    const album = { ...albumDetail[0], songs: songInAlbum.rows };
 
     return album;
   }
