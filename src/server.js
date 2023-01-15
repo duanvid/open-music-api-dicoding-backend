@@ -33,9 +33,6 @@ const authentications = require('./api/authentications');
 const AuthenticationsService = require('./services/postgres/AuthenticationsService');
 const AuthenticationsValidator = require('./validator/authentications');
 
-const _exports = require('./api/export');
-const ProducerService = require('./services/rabbitmq/ProducerService');
-
 const ClientError = require('./exeptions/ClientError');
 const TokenManager = require('./tokenize/TokenManager');
 
@@ -48,7 +45,6 @@ const init = async () => {
   const playlistActivitiesService = new ActivitiesService();
   const collaborationsService = new CollaborationsService();
   const playlistService = new PlaylistService(collaborationsService);
-  const producerService = ProducerService;
 
   const server = Hapi.Server({
     port: process.env.PORT,
@@ -177,14 +173,6 @@ const init = async () => {
         playlistService,
         userService,
         validator: CollaborationValidator,
-      },
-    },
-    {
-      plugin: _exports,
-      options: {
-        exportService: producerService,
-        playlistService,
-        validator: PlaylistValidator,
       },
     },
   ]);
