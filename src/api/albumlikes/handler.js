@@ -35,17 +35,21 @@ class AlbumLikesHandler {
     return response;
   }
 
-  async getAlbumLikesHandler(request) {
+  async getAlbumLikesHandler(request, h) {
     const { id: albumId } = request.params;
 
-    const likes = await this._service.getAlbumLikes(albumId);
+    const { likes, source } = await this._service.getAlbumLikes(albumId);
 
-    return {
+    const response = h.response({
       status: 'success',
       data: {
         likes,
       },
-    };
+    });
+
+    response.header('X-Data-Source', source);
+
+    return response;
   }
 }
 

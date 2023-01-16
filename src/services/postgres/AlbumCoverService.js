@@ -7,7 +7,6 @@ class AlbumCoverService {
   }
 
   async putCoverUrlToAlbums(coverUrl, albumId) {
-    console.log(albumId, coverUrl);
     const query = {
       text: 'UPDATE albums SET coverurl = $1 WHERE albums.id = $2 RETURNING albums.id',
       values: [coverUrl, albumId],
